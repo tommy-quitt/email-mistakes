@@ -1,0 +1,56 @@
+Private Sub Application_AdvancedSearchComplete(ByVal SearchObject As Search)
+    MsgBox ("Searching" & SearchObject.Filter)
+End Sub
+
+Private Sub Application_ItemSend(ByVal Item As Object, Cancel As Boolean)
+ Dim recips As Outlook.Recipients
+ Dim recip As Outlook.Recipient
+ Dim pa As Outlook.PropertyAccessor
+ Dim prompt As String
+ Dim Address As String
+ Dim lLen
+ Dim strMyDomain
+ Dim FirstDomain
+ Dim SecondDomain
+ Dim internal As Long
+ Dim external As Long
+ 
+  
+Const PR_SMTP_ADDRESS As String = "http://schemas.microsoft.com/mapi/proptag/0x39FE001E"
+  
+' non-exchange
+ userAddress = Session.CurrentUser.Address
+' use for exchange accounts
+'userAddress = Session.CurrentUser.AddressEntry.GetExchangeUser.PrimarySmtpAddress
+lLen = Len(userAddress) - InStrRev(userAddress, "@")
+strMyDomain = Right(userAddress, lLen)
+ 
+Set recips = Item.Recipients
+For Each recip In recips
+ Set pa = recip.PropertyAccessor
+   
+Address = LCase(pa.GetProperty(PR_SMTP_ADDRESS))
+ lLen = Len(Address) - InStrRev(Address, "@")
+str1 = Right(Address, lLen)
+ 
+  If str1 <> strMyDomain Then
+    If FirstDomain = "" Then
+        FirstDomain = str1
+    ElseIf str1 <> FirstDomain And SecondDomain = "" Then
+        SecondDomain = str1
+   End If
+End If
+  
+Next
+ 
+ If SecondDomain <> "" Then
+ prompt = "This email is being sent to " + FirstDomain & " and " & SecondDomain & " addresses. Do you still wish to send?"
+ 
+ If MsgBox(prompt, vbYesNo + vbExclamation + vbMsgBoxSetForeground, "Check Address") = vbNo Then
+    Cancel = True
+ End If
+   
+End If
+  
+
+End Sub
